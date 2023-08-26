@@ -1,0 +1,240 @@
+---
+title: "Nur Aziz"
+output:
+  pdf_document:
+    toc: yes
+  html_document:
+    css:
+    - css/make-cv-like-other.css #this contain header setting and title configuration
+    - css/one-column-cv.css
+    - css/website-page.css #icon department location etc
+    - css/style.css #font summary in here
+    - https://use.fontawesome.com/releases/v5.7.2/css/all.css
+    toc: yes
+    toc_float: yes
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+library(tidyverse)
+library(knitr)
+library(here)
+library(DT)
+library(lubridate)
+
+#### publications #####
+publications <- read_csv("_content/publications.csv")
+
+#### cv entries #####
+cv_entries <- read_csv("_content/cv_entries.csv") %>% 
+  mutate(year_begin = year(date)) %>%
+  mutate(year_end = case_when(
+    date_end == "present" ~ date_end,
+    !is.na(date_end) ~ str_sub(date_end, 1, 4),
+    is.na(date_end) ~ date_end
+  )) %>%
+  mutate(year = ifelse((is.na(year_end) | year_begin == year_end),
+                      year_begin,
+                      str_c(year_begin, " --- ", year_end)))
+
+```
+
+<br>
+
+# Summary
+
+I am passionate about molecular biology research, particularly in **cancer biology** and **innate immunity**. 
+
+My **academic background** mainly focused on understanding the molecular complexity of protein methylation in cancer. The need to explore public RNAseq datasets from cancer patients drove me to (self)-study **bioinformatics** which I also found a very fascinating field. In addition, I am also familiar with molecular signaling such as inflammation-related transcription factor signaling ie. NF-kB, AP-1, and IRF3. As part of my combined Master-PhD study, I have elucidated several molecular targets of plant extracts or compounds in the context of their anti-inflammation property. 
+
+I am currently searching for a **postdoctoral** position.
+Download a brief version of [my CV as PDF](https://github.com/nuraziz20/repository/raw/main/docs/Nur Aziz 2022 [Recovered].pdf).
+
+
+
+
+![](img/home1.jpg)
+
+```{block type='col-6', echo=TRUE}
+
+
+| <i class="fas fa-map-marker-alt"></i> Department of Integrative Biotechnology,\ Sungkyunkwan University, South Korea 
+| <i class="fas fa-map-marker-alt"></i> Pharmacy Program,\ Universitas Ma Chung, Indonesia
+
+| <i class="fas fa-envelope"></i>  nuraziz\@skku.edu nur.aziz\@machung.ac.id
+| <i class="fas fa-globe"></i>  [www.nuraziz.site](https://nuraziz.site) 
+| <i class="fab fa-github"></i>  [nuraziz20](https://github.com/nuraziz20) 
+
+
+```
+<br>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-6GG23FRN33"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-6GG23FRN33');
+</script>
+
+# Academia
+## Education {.education .nohead}
+```{r}
+cv_entries %>% 
+  filter(type == 'education') %>% 
+  mutate(what = str_c(what, ", ", where)) %>% 
+  select(year, what) %>% 
+  kable()
+```
+
+## Research {.tabset .output-header}
+### Publications {.nohead .publications}
+```{r}
+publications_table <- publications %>%
+  arrange(desc(date), type) %>%
+  mutate(author_year = str_c(authors_full, " (", year(date), "). ")) %>%
+  mutate(title = ifelse(!is.na(url), str_c("[", title, "](", url, ")"), title)) %>% #turn title into link
+  mutate(citation = ifelse(!is.na(award),
+                           str_c(author_year, title, venue, "<i class='fas fa-award'></i><em>", award, "</em>", sep = " "),
+                           str_c(author_year, title, venue, sep = " "))) %>%
+  mutate(citation = str_replace(citation, "Nur Aziz", "_Nur Aziz_")) %>% # make my name italicised
+  mutate(citation = str_replace(citation, "Nur Aziz", "__Nur Aziz__")) %>%
+  mutate(citation = str_replace(citation, "shared first authorships", "__shared first authorships__")) %>%
+  filter(type != "master's thesis") %>%
+  select(type, citation)
+
+
+publications_table %>%
+  knitr::kable()
+
+```
+
+### Talks {}
+```{r}
+cv_entries %>% 
+  filter(type == 'talk') %>% 
+  mutate(where = str_replace(where, "\\[([^]]*)\\]\\(([^\\s^\\)]*)[\\s\\)]", "<a href='\\2'>\\1</a>")) %>% 
+  mutate(what = str_c("<em>", what, "</em>, ", where)) %>% 
+  select(Date = date, Talk = what) %>% 
+  mutate(Date = as_date(Date)) %>% 
+  arrange(desc(Date)) %>% 
+  mutate(Date = str_c(year(Date),
+                      ", ",
+                      month(Date, label = TRUE))) %>% 
+  datatable(rownames = FALSE, escape = FALSE, class = 'row-border', options = list(
+  pageLength = 10
+))
+
+  
+```
+
+### Posters {.nohead .posters}
+```{r}
+cv_entries %>% 
+  filter(type == 'poster') %>%
+  mutate(what = str_c("*", what, "*, ", where)) %>% 
+  select(year_begin, what) %>% 
+  arrange(desc(year_begin)) %>% 
+  kable()
+```
+
+## Teaching experience {.teaching .service .nohead}
+```{r}
+cv_entries %>% 
+  filter(type == 'teaching') %>% 
+  mutate(what = ifelse(!is.na(additional_info), 
+    str_c("<span class='work-title'>", what, "</span><br class='work-break'>", where, "<br>", additional_info),
+    str_c("<span class='work-title'>", what, "</span><br class='work-break'>", where))) %>% 
+  select(year, what) %>% 
+  kable()
+```
+
+## Other {.tabset .output-header}
+### Grants and Awards {.grants .nohead}
+```{r}
+cv_entries %>% 
+  filter(type == 'awards') %>% 
+  mutate(what = str_c(what, ", ", where)) %>% 
+  select(year_begin, what) %>% 
+  kable()
+
+```
+### Research Internship {.grants .nohead}
+```{r}
+cv_entries %>% 
+  filter(type == 'internship') %>% 
+  mutate(what = str_c(what, ", ", where)) %>% 
+  select(year_begin, what) %>% 
+  kable()
+
+```
+
+# Technical
+## Wet Lab Skills {.technical .nohead}
+```{r}
+cv_entries %>% 
+  filter(type == 'technical') %>% 
+  mutate(what = str_c("- *", what, "* ", additional_info)) %>% 
+  select(what) %>% 
+  kable()
+```
+
+## Dry Lab Skills {.technical .nohead}
+```{r}
+cv_entries %>% 
+  filter(type == 'bioinformatics') %>% 
+  mutate(what = str_c("- *", what, "* ", additional_info)) %>% 
+  select(what) %>% 
+  kable()
+```
+
+## Other software proficiency {.technical .nohead}
+```{r}
+cv_entries %>% 
+  filter(type == 'other software') %>% 
+  mutate(what = str_c("- *", what, "* ", additional_info)) %>% 
+  select(what) %>% 
+  kable()
+```
+
+# Personal
+## Volunteering {.personal .service .nohead}
+```{r}
+cv_entries %>%
+  filter(type == 'volunteering') %>%
+  mutate(what = str_c("<span class='work-title'>", what, "</span><br class='work-break'>", where)) %>%
+  mutate(what = ifelse(!is.na(additional_info), str_c(what, "<br>", additional_info), what)) %>%
+  arrange(desc(year), desc(year_end)) %>%
+  select(year, what) %>%
+  kable()
+```
+
+## Book written {.personal .service .nohead}
+```{r}
+cv_entries %>%
+  filter(type == 'book') %>%
+  mutate(what = ifelse(!is.na(url), str_c("[", what, "](", url, ")"), title)) %>%
+  mutate(what = str_c("<span class='work-title'>", what, "</span><br class='work-break'>", where)) %>%
+  mutate(what = ifelse(!is.na(additional_info), str_c(what, "<br>", additional_info), what)) %>%
+  arrange(desc(year), desc(year_end)) %>%
+  select(year, what) %>%
+  kable()
+```
+
+<!-- Default Statcounter code for My Website https://www.nuraziz.site -->
+<script type="text/javascript">
+var sc_project=12842337; 
+var sc_invisible=0; 
+var sc_security="cd342b69"; 
+var scJsHost = "https://";
+document.write("<sc"+"ript type='text/javascript' src='" + scJsHost+
+"statcounter.com/counter/counter.js'></"+"script>");
+</script>
+<noscript><div class="statcounter"><a title="Web Analytics"
+href="https://statcounter.com/" target="_blank"><img class="statcounter"
+src="https://c.statcounter.com/12842337/0/cd342b69/0/" alt="Web Analytics"
+referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
+<!-- End of Statcounter Code -->

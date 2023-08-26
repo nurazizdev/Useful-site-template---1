@@ -1,0 +1,19 @@
+---
+title: "Wet Lab Notebook"
+output:
+  html_document:
+    css:
+    - css/make-cv-like-other.css
+    - https://use.fontawesome.com/releases/v5.7.2/css/all.css
+    - css/style.css
+    - css/one-column-cv.css
+    toc: true
+    toc_float: true
+
+---
+
+This site is still under construction. 
+
+
+* [NO Production and MTT Assay](content/NOProductionandMTTassay.html)
+* [RNA Prepicitation and cDNA synthesis](content/RNAprepandcdnasynthesis.html)
